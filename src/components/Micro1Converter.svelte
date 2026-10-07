@@ -3,9 +3,19 @@
 
 	const DEEL_FEE = 1.42;
 	const PAYONEER_WITHDRAWAL_RATE = 0.03;
-	const USD_TO_PKR_RATE = 277;
+	const FALLBACK_USD_TO_PKR_RATE = 277;
 	const INPUT_STORAGE_KEY = "micro1-converter-inputs";
 	const INPUT_STORAGE_DEBOUNCE_MS = 300;
+
+	type RateStatus = "loading" | "hit" | "miss" | "stale" | "fallback";
+
+	interface RateResponse {
+		rate: number;
+		updatedAt: string;
+		source: string;
+		sourceUrl: string;
+		cacheStatus: Exclude<RateStatus, "loading">;
+	}
 
 	const usd = new Intl.NumberFormat("en-US", {
 		style: "currency",
@@ -22,6 +32,11 @@
 	let tasks = $state<number | undefined>(10);
 	let payPerTask = $state<number | undefined>(6.25);
 	let inputStorageReady = $state(false);
+	let usdToPkrRate = $state(FALLBACK_USD_TO_PKR_RATE);
+	let rateStatus = $state<RateStatus>("loading");
+	let rateUpdatedAt = $state<string | null>(null);
+	let rateSource = $state("ExchangeRate-API");
+	let rateSourceUrl = $state("https://www.exchangerate-api.com");
 
 	function isCachedInput(value: unknown): value is number | null {
 		return value === null || (typeof value === "number" && Number.isFinite(value));
@@ -71,6 +86,40 @@
 		return () => window.clearTimeout(timeout);
 	});
 
+	onMount(() => {
+		const controller = new AbortController();
+
+		async function loadRate() {
+			try {
+				const response = await fetch("/api/usd-pkr", {
+					headers: { Accept: "application/json" },
+					signal: controller.signal,
+				});
+
+				if (!response.ok) throw new Error(`Rate request failed with ${response.status}.`);
+
+				const data = (await response.json()) as RateResponse;
+				if (!Number.isFinite(data.rate) || data.rate <= 0) {
+					throw new Error("Rate response was invalid.");
+				}
+
+				usdToPkrRate = data.rate;
+				rateStatus = data.cacheStatus;
+				rateUpdatedAt = data.updatedAt;
+				rateSource = data.source;
+				rateSourceUrl = data.sourceUrl;
+			} catch (error) {
+				if (controller.signal.aborted) return;
+				console.error("Unable to load the current USD/PKR rate.", error);
+				rateStatus = "fallback";
+			}
+		}
+
+		void loadRate();
+
+		return () => controller.abort();
+	});
+
 	function toNonNegativeNumber(value: number | undefined) {
 		return typeof value === "number" && Number.isFinite(value) && value > 0
 			? value
@@ -91,7 +140,14 @@
 		roundCurrency(afterDeelFee * (1 - PAYONEER_WITHDRAWAL_RATE)),
 	);
 	const inBank = $derived(
-		roundCurrency(afterWithdrawal * USD_TO_PKR_RATE),
+		roundCurrency(afterWithdrawal * usdToPkrRate),
+	);
+	const formattedRateDate = $derived(
+		rateUpdatedAt
+			? new Intl.DateTimeFormat("en-PK", { dateStyle: "medium" }).format(
+					new Date(rateUpdatedAt),
+				)
+			: null,
 	);
 </script>
 
@@ -200,6 +256,25 @@
 			<dd><output>PKR {pkr.format(inBank)}</output></dd>
 		</div>
 	</dl>
+
+	<p class="rate-note" aria-live="polite">
+		<span>1 USD = PKR {pkr.format(usdToPkrRate)}</span>
+		{#if rateStatus === "loading"}
+			<span> · checking latest rate…</span>
+		{:else if rateStatus === "stale"}
+			<span> · last known rate</span>
+		{:else if rateStatus === "fallback"}
+			<span> · fallback rate</span>
+		{:else if formattedRateDate}
+			<span> · updated {formattedRateDate}</span>
+		{/if}
+		{#if rateStatus !== "fallback"}
+			<span> · </span>
+			<a href={rateSourceUrl} target="_blank" rel="noreferrer">
+				Rates by {rateSource}
+			</a>
+		{/if}
+	</p>
 </form>
 
 <style>
@@ -333,6 +408,27 @@
 		padding-top: 0.5rem;
 		color: #f5f5f5;
 		font-weight: 600;
+	}
+
+	.rate-note {
+		width: 100%;
+		max-width: 30rem;
+		margin: 0.75rem 0 0 auto;
+		color: #737373;
+		font-size: 0.75rem;
+		line-height: 1.5;
+		text-align: right;
+	}
+
+	.rate-note a {
+		color: #a3a3a3;
+		text-underline-offset: 0.2em;
+		transition: color 150ms ease;
+	}
+
+	.rate-note a:hover,
+	.rate-note a:focus-visible {
+		color: #fdba74;
 	}
 
 	.tooltip {
