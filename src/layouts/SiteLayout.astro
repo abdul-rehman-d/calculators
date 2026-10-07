@@ -1,0 +1,149 @@
+---
+import "../styles/global.css";
+
+interface Props {
+	title: string;
+	subtitle?: string;
+	description?: string;
+	documentTitle?: string;
+}
+
+const {
+	title,
+	subtitle,
+	description = "A bunch of mini calculating tools just for my personal use.",
+	documentTitle = title,
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<meta name="description" content={description} />
+		<meta name="darkreader-lock" />
+		<link rel="icon" type="image/png" href="/logo.png" />
+		<title>{documentTitle}</title>
+	</head>
+	<body>
+		<main class="site-shell">
+			<header>
+				<h1 class="lowercase"><a href="/">{title}</a></h1>
+				{subtitle && <p class="lowercase">{subtitle}</p>}
+			</header>
+
+			<section class="content">
+				<slot />
+			</section>
+
+			<footer>
+				<p>
+					© {new Date().getFullYear()}{" "}
+					<a href="https://abdul-rehman-d.com/">Abdul Rehman Daniyal</a>. All
+					rights reserved.
+				</p>
+			</footer>
+		</main>
+	</body>
+</html>
+
+<style>
+	.site-shell {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		gap: 2rem;
+		width: 100%;
+		max-width: 64rem;
+		min-height: 100vh;
+		margin-inline: auto;
+		padding: 3rem 2rem;
+		font-size: 0.875rem;
+	}
+
+	header h1,
+	header p,
+	footer p {
+		margin: 0;
+	}
+
+	.lowercase {
+		text-transform: lowercase;
+	}
+
+	header h1 {
+		font-family: "Bitcount Grid Double", monospace;
+		font-size: 1.5rem;
+		font-weight: 400;
+		line-height: 1.25;
+	}
+
+	header h1 a {
+		color: #818cf8;
+		text-decoration: none;
+	}
+
+	header p {
+		margin-top: 0.125rem;
+		color: #a3a3a3;
+		font-size: 1rem;
+		line-height: 1.75;
+	}
+
+	.content {
+		display: flex;
+		flex-grow: 1;
+		flex-direction: column;
+	}
+
+	footer {
+		border-top: 1px solid currentColor;
+		padding-block: 1rem;
+		color: #a3a3a3;
+	}
+
+	footer p {
+		font-size: 0.75rem;
+		line-height: 1.5;
+	}
+
+	footer a {
+		color: #fdba74;
+		text-underline-offset: 2px;
+		transition: color 150ms ease;
+	}
+
+	footer a:hover {
+		color: #fb923c;
+	}
+
+	@media (min-width: 640px) {
+		.site-shell {
+			font-size: 1rem;
+		}
+
+		header h1 {
+			font-size: 1.875rem;
+		}
+
+		header p {
+			font-size: 1.125rem;
+		}
+
+		footer p {
+			font-size: 0.875rem;
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.site-shell {
+			font-size: 1.125rem;
+		}
+
+		header p {
+			font-size: 1.25rem;
+		}
+	}
+</style>

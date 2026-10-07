@@ -1,16 +1,155 @@
 ---
+import SiteLayout from "../layouts/SiteLayout.astro";
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<SiteLayout
+	title="Calculators"
+	subtitle="A bunch of mini calculating tools just for my personal use."
+>
+	<div class="calculator-grid">
+		<a class="calculator-card" href="/micro1-converter">
+			<span class="card-top" aria-hidden="true">
+				<span class="card-mark">
+					<span></span>
+					<span></span>
+					<span></span>
+					<span></span>
+				</span>
+				<span class="card-arrow">↗</span>
+			</span>
+			<span class="card-title">Micro1 Converter</span>
+		</a>
+	</div>
+</SiteLayout>
+
+<style>
+	.calculator-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 1rem;
+		width: 100%;
+	}
+
+	.calculator-card {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		aspect-ratio: 1;
+		overflow: hidden;
+		width: 100%;
+		padding: 1rem;
+		border: 1px solid #404040;
+		border-radius: 0.75rem;
+		background: linear-gradient(145deg, #262626 0%, #1c1c1c 100%);
+		color: #f5f5f5;
+		line-height: 1.5;
+		text-decoration: none;
+		transition:
+			border-color 200ms ease,
+			box-shadow 200ms ease,
+			transform 200ms ease;
+	}
+
+	.calculator-card::before {
+		position: absolute;
+		inset: 0;
+		background: radial-gradient(
+			circle at 85% 10%,
+			rgba(129, 140, 248, 0.12),
+			transparent 38%
+		);
+		content: "";
+		pointer-events: none;
+	}
+
+	.calculator-card:hover {
+		transform: translateY(-3px);
+		border-color: #fdba74;
+		box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+	}
+
+	.calculator-card:focus-visible {
+		outline: 2px solid #818cf8;
+		outline-offset: 3px;
+	}
+
+	.card-top {
+		position: relative;
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		width: 100%;
+	}
+
+	.card-mark {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 0.25rem;
+		width: 2.75rem;
+		aspect-ratio: 1;
+		padding: 0.625rem;
+		border: 1px solid #404040;
+		border-radius: 0.625rem;
+		background: #171717;
+		transition: transform 200ms ease;
+	}
+
+	.card-mark span {
+		border-radius: 0.125rem;
+		background: #525252;
+	}
+
+	.card-mark span:nth-child(1) {
+		background: #818cf8;
+	}
+
+	.card-mark span:nth-child(4) {
+		background: #fdba74;
+	}
+
+	.card-arrow {
+		color: #a3a3a3;
+		font-size: 1rem;
+		line-height: 1;
+		transition:
+			color 200ms ease,
+			transform 200ms ease;
+	}
+
+	.card-title {
+		position: relative;
+		font-size: 1rem;
+		font-weight: 600;
+		line-height: 1.35;
+	}
+
+	.calculator-card:hover .card-mark {
+		transform: rotate(-3deg);
+	}
+
+	.calculator-card:hover .card-arrow {
+		transform: translate(2px, -2px);
+		color: #fdba74;
+	}
+
+	@media (min-width: 768px) {
+		.calculator-grid {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 1.5rem;
+		}
+
+		.calculator-card {
+			padding: 1.5rem;
+		}
+
+		.card-mark {
+			width: 3.25rem;
+			padding: 0.75rem;
+		}
+
+		.card-title {
+			font-size: 1.125rem;
+		}
+	}
+</style>
