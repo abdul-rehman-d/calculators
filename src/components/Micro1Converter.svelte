@@ -1,7 +1,11 @@
 <script lang="ts">
+	import { onMount } from "svelte";
+
 	const DEEL_FEE = 1.42;
 	const PAYONEER_WITHDRAWAL_RATE = 0.03;
 	const USD_TO_PKR_RATE = 277;
+	const INPUT_STORAGE_KEY = "micro1-converter-inputs";
+	const INPUT_STORAGE_DEBOUNCE_MS = 300;
 
 	const usd = new Intl.NumberFormat("en-US", {
 		style: "currency",
@@ -17,6 +21,55 @@
 
 	let tasks = $state<number | undefined>(10);
 	let payPerTask = $state<number | undefined>(6.25);
+	let inputStorageReady = $state(false);
+
+	function isCachedInput(value: unknown): value is number | null {
+		return value === null || (typeof value === "number" && Number.isFinite(value));
+	}
+
+	onMount(() => {
+		try {
+			const storedInputs = localStorage.getItem(INPUT_STORAGE_KEY);
+
+			if (storedInputs) {
+				const cachedInputs: unknown = JSON.parse(storedInputs);
+
+				if (
+					typeof cachedInputs === "object" &&
+					cachedInputs !== null &&
+					"tasks" in cachedInputs &&
+					"payPerTask" in cachedInputs &&
+					isCachedInput(cachedInputs.tasks) &&
+					isCachedInput(cachedInputs.payPerTask)
+				) {
+					tasks = cachedInputs.tasks ?? undefined;
+					payPerTask = cachedInputs.payPerTask ?? undefined;
+				}
+			}
+		} catch {
+			// Keep the defaults if storage is unavailable or contains invalid data.
+		} finally {
+			inputStorageReady = true;
+		}
+	});
+
+	$effect(() => {
+		if (!inputStorageReady) return;
+
+		const cachedInputs = {
+			tasks: tasks ?? null,
+			payPerTask: payPerTask ?? null,
+		};
+		const timeout = window.setTimeout(() => {
+			try {
+				localStorage.setItem(INPUT_STORAGE_KEY, JSON.stringify(cachedInputs));
+			} catch {
+				// The converter still works when storage is unavailable.
+			}
+		}, INPUT_STORAGE_DEBOUNCE_MS);
+
+		return () => window.clearTimeout(timeout);
+	});
 
 	function toNonNegativeNumber(value: number | undefined) {
 		return typeof value === "number" && Number.isFinite(value) && value > 0
