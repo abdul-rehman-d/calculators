@@ -12,7 +12,10 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^7.3.6"
+    "@astrojs/svelte": "^9.0.1",
+    "astro": "^7.3.6",
+    "svelte": "^5.57.2",
+    "typescript": "^6.0.3"
   },
   "allowScripts": {
     "esbuild": true

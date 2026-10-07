@@ -29,4 +29,4 @@ Create a production build with:
 pnpm build
 ```
 
-Built with [Astro](https://astro.build/).
+Built with [Astro](https://astro.build/) and [Svelte](https://svelte.dev/).
